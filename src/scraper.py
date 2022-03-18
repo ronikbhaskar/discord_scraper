@@ -10,7 +10,6 @@ num_queries = None
 
 @scraper.event
 async def on_ready():
-    # print(scraper.guilds)
 
     for server in scraper.guilds:
         if server.name == server_name:
@@ -19,16 +18,12 @@ async def on_ready():
         print("didn't find server")
         return
 
-    # print(server.channels)
-
     for channel in server.channels:
         if channel.name == channel_name:
             break
     else:
         print("didn't find channel")
         return
-
-    # print(f"found channel {channel.name} in {server.name}")
 
     messages = await channel.history(limit=num_queries).flatten()
     for message in messages:
