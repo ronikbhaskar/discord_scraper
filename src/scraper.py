@@ -7,6 +7,7 @@ scraper = discord.Client()
 server_name = None
 channel_name = None
 num_queries = None
+out_file = None
 
 @scraper.event
 async def on_ready():
@@ -26,8 +27,10 @@ async def on_ready():
         return
 
     messages = await channel.history(limit=num_queries).flatten()
-    for message in messages[::-1]:
-        print(f"{message.author}: {message.content}")
+
+    with open(out_file, "a") as f:
+        for message in messages[::-1]:
+            f.write(f"{message.author}: {message.content}\n")
 
 def usage():
     """
@@ -38,8 +41,10 @@ def usage():
     print("args:")
     print("-s {name of server} : required, name of server")
     print("\talias --server\n")
-    print("-c {name of channel} : required, name of channel")
+    print("-f {path to out file} : required, text file to save results")
     print("\talias --file\n")
+    print("-c {name of channel} : required, name of channel")
+    print("\talias --channel\n")
     print("-n {number of messages} : required, max 1000")
     print("\talias --num\n")
     print("-h : prints usage information")
@@ -69,9 +74,10 @@ def set_variables():
     global server_name
     global channel_name
     global num_queries
+    global out_file
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "s:c:n:h", ["server=","channel=", "num=", "help="])
+        opts, args = getopt.getopt(sys.argv[1:], "f:s:c:n:h", ["file=", "server=","channel=", "num=", "help="])
     except getopt.GetoptError as err:
         # print usage information and exit:
         print(err) # option arg not recognized
@@ -85,6 +91,8 @@ def set_variables():
             server_name = arg
         elif opt in ("-c", "--channel"):
             channel_name = arg
+        elif opt in ("-f", "--file"):
+            out_file = arg
         elif opt in ("-h", "--help"):
             usage()
             sys.exit(0)
@@ -93,7 +101,8 @@ def set_variables():
 
     if server_name == None \
         or channel_name == None \
-        or num_queries == None:
+        or num_queries == None \
+        or out_file == None:
         usage()
         sys.exit(0)
 
