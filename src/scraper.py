@@ -26,7 +26,7 @@ async def on_ready():
         return
 
     messages = await channel.history(limit=num_queries).flatten()
-    for message in messages:
+    for message in messages[::-1]:
         print(f"{message.author}: {message.content}")
 
 def usage():
