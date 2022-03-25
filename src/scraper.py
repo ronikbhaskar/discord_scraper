@@ -142,6 +142,7 @@ def set_variables():
 
 def main():
     set_variables()
+    print("Use this tool at your own risk.")
     token = input("token: ")
     scraper.run(token, bot=False)
 
