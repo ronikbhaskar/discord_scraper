@@ -2,12 +2,18 @@
 import discord
 import sys
 import getopt
+import csv
 
-scraper = discord.Client()
+intents = discord.Intents.default()
+intents.members = True
+
+scraper = discord.Client(intents=intents)
 server_name = None
 channel_name = None
 num_queries = None
 out_file = None
+member_file = None
+role_file = None
 
 @scraper.event
 async def on_ready():
@@ -19,6 +25,21 @@ async def on_ready():
         print("didn't find server")
         return
 
+    if role_file is not None:
+        with open(role_file, "w", encoding="UTF8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["ID","role_name"])
+            for role in server.roles:
+                writer.writerow([role.id, role.name])
+
+    if member_file is not None:
+        with open(member_file, "w", encoding="UTF8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["ID","username","display_name"])
+            for member in server.members:
+                # here, I can get all the relevant info to match ID (id) to nickname (display_name) to username (name)
+                writer.writerow([member.id, member.name, member.display_name])
+
     for channel in server.channels:
         if channel.name == channel_name:
             break
@@ -28,9 +49,11 @@ async def on_ready():
 
     messages = await channel.history(limit=num_queries).flatten()
 
-    with open(out_file, "a") as f:
+    with open(out_file, "a", encoding="UTF8") as f:
         for message in messages[::-1]:
             f.write(f"{message.author}: {message.content}\n")
+
+    print("Finished scraping. You can end this process.")
 
 def usage():
     """
@@ -45,6 +68,10 @@ def usage():
     print("\talias --file\n")
     print("-c {name of channel} : required, name of channel")
     print("\talias --channel\n")
+    print("-m {member data csv file} : optional, file to save mappings of ID, display name, and username")
+    print("\talias --member-csv\n")
+    print("-r {role data csv file} : optional, file to save mappings of ID, role name")
+    print("\talias --role-csv\n")
     print("-n {number of messages} : required, max 1000")
     print("\talias --num\n")
     print("-h : prints usage information")
@@ -75,9 +102,12 @@ def set_variables():
     global channel_name
     global num_queries
     global out_file
+    global member_file
+    global role_file
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "f:s:c:n:h", ["file=", "server=","channel=", "num=", "help="])
+        opts, _ = getopt.getopt(sys.argv[1:], "f:s:c:n:m:r:h", 
+                  ["file=", "server=","channel=", "num=", "member-csv=", "role-csv=", "help"])
     except getopt.GetoptError as err:
         # print usage information and exit:
         print(err) # option arg not recognized
@@ -93,6 +123,10 @@ def set_variables():
             channel_name = arg
         elif opt in ("-f", "--file"):
             out_file = arg
+        elif opt in ("-m", "--member-csv"):
+            member_file = arg
+        elif opt in ("-r", "--role-csv"):
+            role_file = arg
         elif opt in ("-h", "--help"):
             usage()
             sys.exit(0)
