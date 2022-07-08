@@ -14,6 +14,7 @@ num_queries = None
 out_file = None
 member_file = None
 role_file = None
+channel_file = None
 
 @scraper.event
 async def on_ready():
@@ -37,8 +38,14 @@ async def on_ready():
             writer = csv.writer(f)
             writer.writerow(["ID","username","display_name"])
             for member in server.members:
-                # here, I can get all the relevant info to match ID (id) to nickname (display_name) to username (name)
                 writer.writerow([member.id, member.name, member.display_name])
+
+    if channel_file is not None:
+        with open(channel_file, "w", encoding="UTF8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["ID","name"])
+            for channel in server.channels:
+                writer.writerow([channel.id, channel.name])
 
     for channel in server.channels:
         if channel.name == channel_name:
@@ -72,6 +79,8 @@ def usage():
     print("\talias --member-csv\n")
     print("-r {role data csv file} : optional, file to save mappings of ID, role name")
     print("\talias --role-csv\n")
+    print("-l {channel data csv file} : optional, file to save mappings of ID, channel name")
+    print("\talias --channel-csv\n")
     print("-n {number of messages} : required, max 1000")
     print("\talias --num\n")
     print("-h : prints usage information")
@@ -104,10 +113,11 @@ def set_variables():
     global out_file
     global member_file
     global role_file
+    global channel_file
     
     try:
-        opts, _ = getopt.getopt(sys.argv[1:], "f:s:c:n:m:r:h", 
-                  ["file=", "server=","channel=", "num=", "member-csv=", "role-csv=", "help"])
+        opts, _ = getopt.getopt(sys.argv[1:], "f:s:c:n:m:r:l:h", 
+                  ["file=", "server=","channel=", "num=", "member-csv=", "role-csv=", "channel-csv=", "help"])
     except getopt.GetoptError as err:
         # print usage information and exit:
         print(err) # option arg not recognized
@@ -127,6 +137,8 @@ def set_variables():
             member_file = arg
         elif opt in ("-r", "--role-csv"):
             role_file = arg
+        elif opt in ("-l", "--channel-csv"):
+            channel_file = arg
         elif opt in ("-h", "--help"):
             usage()
             sys.exit(0)
